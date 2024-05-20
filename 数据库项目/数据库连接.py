@@ -1,7 +1,7 @@
 from pymysql import Connection
-from 商户 import Merchant
-import 商户
 from 用户 import User
+from 商户 import Merchant
+from 菜品 import Dish
 
 #text_file_reader=TextFileReader(" ")
 
@@ -32,7 +32,7 @@ class DB:
         )
         self.conn.select_db("食堂")
         self.cursor = self.conn.cursor()
-    
+
     def execute(self, sql, values=None):
         if values:
             self.cursor.execute(sql, values)
@@ -45,36 +45,78 @@ class DB:
         self.conn.close()
         self._initialized = False
 
-    def insert_user(self, user: User):
-        sql = "INSERT INTO users (id, name, gender, student_id, account_information) VALUES (%s, %s, %s, %s, %s)"
-        values = (user.id, user.name, user.gender, user.student_id, user.account_information)
-        self.execute(sql, values)
+class Admin:
+    def __init__(self):
+        self.db = DB()
 
-    def delete_user(self, user_id: int):
+    def get_user_info(self, user_id):
+        sql = "SELECT * FROM users WHERE id = %s"
+        values = (user_id,)
+        result = self.db.execute(sql, values)
+        return result
+
+    def add_user(self, user_info: User):
+        sql = "INSERT INTO users (id, name, gender, student_id, account_information) VALUES (%s, %s, %s, %s, %s)"
+        values = (user_info.id, user_info.name, user_info.gender, user_info.student_id, user_info.account_information)
+        self.db.execute(sql, values)
+
+    def update_user(self, user_id, user_info: User):
+        sql = "UPDATE users SET name = %s, gender = %s, student_id = %s, account_information = %s WHERE id = %s"
+        values = (user_info.name, user_info.gender, user_info.student_id, user_info.account_information, user_id)
+        self.db.execute(sql, values)
+
+    def delete_user(self, user_id):
         sql = "DELETE FROM users WHERE id = %s"
         values = (user_id,)
-        self.execute(sql, values)
+        self.db.execute(sql, values)
 
-    def update_user(self, user: User):
-        sql = "UPDATE users SET name = %s, gender = %s, student_id = %s, account_information = %s WHERE id = %s"
-        values = (user.name, user.gender, user.student_id, user.account_information, user.id)
-        self.execute(sql, values)
+    def get_business_info(self, business_id):
+        sql = "SELECT * FROM merchants WHERE id = %s"
+        values = (business_id,)
+        result = self.db.execute(sql, values)
+        return result
 
-    def insert_merchant(self, merchant: Merchant):
+    def add_business(self, business_info: Merchant):
         sql = "INSERT INTO merchants (id, name, address, main_dish) VALUES (%s, %s, %s, %s)"
-        values = (merchant.id, merchant.name, merchant.address, merchant.main_dish)
-        self.execute(sql, values)
+        values = (business_info.id, business_info.name, business_info.address, business_info.main_dish)
+        self.db.execute(sql, values)
 
-    def delete_merchant(self, merchant_id: int):
-        sql = "DELETE FROM merchants WHERE id = %s"
-        values = (merchant_id,)
-        self.execute(sql, values)
-
-    def update_merchant(self, merchant: Merchant):
+    def update_business(self, business_id, business_info: Merchant):
         sql = "UPDATE merchants SET name = %s, address = %s, main_dish = %s WHERE id = %s"
-        values = (merchant.name, merchant.address, merchant.main_dish, merchant.id)
-        self.execute(sql, values)
+        values = (business_info.name, business_info.address, business_info.main_dish, business_id)
+        self.db.execute(sql, values)
 
+    def delete_business(self, business_id):
+        sql = "DELETE FROM merchants WHERE id = %s"
+        values = (business_id,)
+        self.db.execute(sql, values)
+
+class MerchantOperations:
+    def __init__(self):
+        self.db = DB()
+
+    def add_dish(self, dish_info: Dish):
+        sql = """INSERT INTO dishes 
+                 (id, name, price, category, description, image, ingredients, nutrition_information, allergens, queue_sales, online_sales, collection_count) 
+                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        values = (dish_info.id, dish_info.name, dish_info.price, dish_info.category, dish_info.description, dish_info.image, 
+                  dish_info.ingredients, dish_info.nutrition_information, dish_info.allergens, dish_info.queue_sales, 
+                  dish_info.online_sales, dish_info.collection_count)
+        self.db.execute(sql, values)
+
+    def update_dish(self, dish_id, dish_info: Dish):
+        sql = """UPDATE dishes SET name = %s, price = %s, category = %s, description = %s, image = %s, ingredients = %s, 
+                 nutrition_information = %s, allergens = %s, queue_sales = %s, online_sales = %s, collection_count = %s 
+                 WHERE id = %s"""
+        values = (dish_info.name, dish_info.price, dish_info.category, dish_info.description, dish_info.image, 
+                  dish_info.ingredients, dish_info.nutrition_information, dish_info.allergens, dish_info.queue_sales, 
+                  dish_info.online_sales, dish_info.collection_count, dish_id)
+        self.db.execute(sql, values)
+
+    def delete_dish(self, dish_id):
+        sql = "DELETE FROM dishes WHERE id = %s"
+        values = (dish_id,)
+        self.db.execute(sql, values)
 
 #print(conn.get_server_info())
 
