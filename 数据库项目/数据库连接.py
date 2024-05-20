@@ -1,4 +1,5 @@
 from pymysql import Connection
+from 商户 import Merchant
 import 商户
 from 用户 import User
 
@@ -31,13 +32,48 @@ class DB:
         )
         self.conn.select_db("食堂")
         self.cursor = self.conn.cursor()
-        self.do = self.cursor.execute
-        self.show = self.cursor.fetchall
+    
+    def execute(self, sql, values=None):
+        if values:
+            self.cursor.execute(sql, values)
+        else:
+            self.cursor.execute(sql)
+        return self.cursor.fetchall()
 
     def close(self):
         self.cursor.close()
         self.conn.close()
         self._initialized = False
+
+    def insert_user(self, user: User):
+        sql = "INSERT INTO users (id, name, gender, student_id, account_information) VALUES (%s, %s, %s, %s, %s)"
+        values = (user.id, user.name, user.gender, user.student_id, user.account_information)
+        self.execute(sql, values)
+
+    def delete_user(self, user_id: int):
+        sql = "DELETE FROM users WHERE id = %s"
+        values = (user_id,)
+        self.execute(sql, values)
+
+    def update_user(self, user: User):
+        sql = "UPDATE users SET name = %s, gender = %s, student_id = %s, account_information = %s WHERE id = %s"
+        values = (user.name, user.gender, user.student_id, user.account_information, user.id)
+        self.execute(sql, values)
+
+    def insert_merchant(self, merchant: Merchant):
+        sql = "INSERT INTO merchants (id, name, address, main_dish) VALUES (%s, %s, %s, %s)"
+        values = (merchant.id, merchant.name, merchant.address, merchant.main_dish)
+        self.execute(sql, values)
+
+    def delete_merchant(self, merchant_id: int):
+        sql = "DELETE FROM merchants WHERE id = %s"
+        values = (merchant_id,)
+        self.execute(sql, values)
+
+    def update_merchant(self, merchant: Merchant):
+        sql = "UPDATE merchants SET name = %s, address = %s, main_dish = %s WHERE id = %s"
+        values = (merchant.name, merchant.address, merchant.main_dish, merchant.id)
+        self.execute(sql, values)
 
 
 #print(conn.get_server_info())
