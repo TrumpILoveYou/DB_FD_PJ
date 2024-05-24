@@ -13,11 +13,12 @@ CREATE TABLE IF NOT EXISTS `users` (
   `name` varchar(255) NOT NULL, -- 姓名
   `gender` varchar(1) NOT NULL, -- 性别
   `student_id` varchar(255) NOT NULL, -- 学生ID
-   `account_information` varchar(255) NOT NULL, -- 账户信息
+  `account_information` varchar(255) NOT NULL, -- 账户信息
   `role` varchar(255) NOT NULL, -- 用户角色
-  `age` int NOT NULL; -- 年龄
+  `age` int NOT NULL, -- 
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- 商户表
 CREATE TABLE IF NOT EXISTS `merchants` (
@@ -86,27 +87,30 @@ CREATE TABLE IF NOT EXISTS `orders` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (`merchant_id`) REFERENCES `merchants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (`dish_id`) REFERENCES `dishes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`dish_id`) REFERENCES `dishes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE -- 去掉逗号
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
-CREATE INDEX idx_dishes_merchant_id ON dishes(merchant_id);
 
-CREATE INDEX idx_collections_user_id ON collections(user_id);
-CREATE INDEX idx_collections_merchant_id ON collections(merchant_id);
-CREATE INDEX idx_collections_dish_id ON collections(dish_id);
 
-CREATE INDEX idx_comments_user_id ON comments(user_id);
-CREATE INDEX idx_comments_merchant_id ON comments(merchant_id);
-CREATE INDEX idx_comments_dish_id ON comments(dish_id);
+-- CREATE INDEX idx_dishes_merchant_id ON dishes(merchant_id);
 
-CREATE INDEX idx_orders_user_id ON orders(user_id);
-CREATE INDEX idx_orders_merchant_id ON orders(merchant_id);
-CREATE INDEX idx_orders_dish_id ON orders(dish_id);
-CREATE INDEX idx_orders_created_at ON orders(created_at);
+-- CREATE INDEX idx_collections_user_id ON collections(user_id);
+-- CREATE INDEX idx_collections_merchant_id ON collections(merchant_id);
+-- CREATE INDEX idx_collections_dish_id ON collections(dish_id);
 
---收藏自动增加
+-- CREATE INDEX idx_comments_user_id ON comments(user_id);
+-- CREATE INDEX idx_comments_merchant_id ON comments(merchant_id);
+-- CREATE INDEX idx_comments_dish_id ON comments(dish_id);
+
+-- CREATE INDEX idx_orders_user_id ON orders(user_id);
+-- CREATE INDEX idx_orders_merchant_id ON orders(merchant_id);
+-- CREATE INDEX idx_orders_dish_id ON orders(dish_id);
+-- CREATE INDEX idx_orders_created_at ON orders(created_at);
+
+
+/*-- 收藏自动增加
 DELIMITER //
 CREATE TRIGGER update_collection_count_after_insert
 AFTER INSERT ON collections
@@ -118,9 +122,10 @@ BEGIN
         WHERE id = NEW.dish_id;
     END IF;
 END//
-DELIMITER ;
+DELIMITER ;'''
 
---销量增加
+
+'''--销量增加
 DELIMITER //
 CREATE TRIGGER update_sales_after_insert
 AFTER INSERT ON orders
@@ -136,10 +141,11 @@ BEGIN
         WHERE id = NEW.dish_id;
     END IF;
 END//
-DELIMITER ;
+DELIMITER ;*/
 
---更新订单信息
+
 SET GLOBAL event_scheduler = ON;
+
 DELIMITER //
 CREATE EVENT IF NOT EXISTS update_order_status
 ON SCHEDULE EVERY 1 MINUTE
@@ -151,3 +157,4 @@ BEGIN
     AND created_at <= NOW() - INTERVAL 2 MINUTE;
 END//
 DELIMITER ;
+

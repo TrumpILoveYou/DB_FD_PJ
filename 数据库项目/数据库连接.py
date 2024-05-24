@@ -17,7 +17,7 @@ class DB:
             host="localhost",
             port=3306,
             user="root",
-            password="",
+            password="1122cccc", # password
             autocommit=True,
         )
         self.conn.select_db("canteen")

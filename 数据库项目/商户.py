@@ -1,6 +1,8 @@
 from 数据库连接 import DB
 from 菜品 import Dish
-
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QHBoxLayout, QFormLayout, QMessageBox
+import sys
 
 class Merchant:
     def __init__(self, id, name, address, main_dish):
@@ -39,3 +41,9 @@ class Merchant:
         values = (dish_id,)
         self.db.execute(sql, values)
         self.db.close()
+
+class MerchantWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Merchant Window")
+        # 在这里添加商户窗口的其他组件和布局

@@ -1,10 +1,12 @@
 from 数据库连接 import DB
 from 订单 import Order
-
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QHBoxLayout, QFormLayout, QMessageBox
+import sys
 
 class User:
-    def __init__(self, id, name, gender, student_id, account_information,role,age):
-        self.id = id  # 对应数据库表中的 `id`
+    def __init__(self, name, gender, student_id, account_information,role,age):
+        # !!! self.id = id  # 对应数据库表中的 `id`
         self.name = name  # 对应数据库表中的 `name`
         self.gender = gender  # 对应数据库表中的 `gender`
         self.student_id = student_id  # 对应数据库表中的 `student_id`
@@ -105,3 +107,9 @@ class User:
             values = (self.id, merchant_id)
         self.db.execute(sql, values)
         self.db.close()
+
+class UserWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("User Window")
+        # 在这里添加用户窗口的其他组件和布局
