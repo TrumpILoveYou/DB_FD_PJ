@@ -23,7 +23,7 @@ class Manager:
         return result
 
     def add_user(self, user_info:User):
-        sql = "INSERT INTO users (name, gender, student_id, account_information,role,age) VALUES (%s, %s, %s, %s)"
+        sql = "INSERT INTO users (name, gender, student_id, account_information, role, age) VALUES (%s, %s, %s, %s, %s, %s)"
         values = (user_info.name, user_info.gender, user_info.student_id, user_info.account_information,user_info.role,user_info.age)
         self.db.execute(sql, values)
         # self.db.close()
@@ -81,25 +81,38 @@ class AdminWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         # 创建布局
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
 
-        # 创建并添加组件
+        # 创建用户相关的布局
+        self.user_layout = QVBoxLayout()
+        self.create_user_widgets()
+
+        # 创建商户相关的布局
+        self.merchant_layout = QVBoxLayout()
+        self.create_merchant_widgets()
+
+        # 将用户和商户布局添加到主布局中
+        self.layout.addLayout(self.user_layout)
+        self.layout.addLayout(self.merchant_layout)
+
+        # 设置主窗口布局
+        self.central_widget.setLayout(self.layout)
+
+        # 初始化用户信息表格
+        self.user_info_table = QTableWidget()
+        self.user_layout.addWidget(self.user_info_table)
+        # 初始化商户信息表格
+        self.merchant_info_table = QTableWidget()
+        self.merchant_layout.addWidget(self.merchant_info_table)
+
+    def create_user_widgets(self):
+        # 创建用户相关的组件
         self.user_id_label = QLabel("User ID:")
         self.user_id_input = QLineEdit()
         self.get_user_button = QPushButton("Get User Info")
         self.get_user_button.clicked.connect(self.get_user_info)
 
-        self.layout.addWidget(self.user_id_label)
-        self.layout.addWidget(self.user_id_input)
-        self.layout.addWidget(self.get_user_button)
-
-        # 创建并添加显示用户信息的表格
-        self.user_info_table = QTableWidget()
-        self.layout.addWidget(self.user_info_table)
-
-        # 添加添加/更新用户信息的组件
         self.user_info_label = QLabel("User Information:")
-        #self.id_input = QLineEdit()
         self.name_input = QLineEdit()
         self.gender_input = QLineEdit()
         self.student_id_input = QLineEdit()
@@ -107,34 +120,76 @@ class AdminWindow(QMainWindow):
         self.role_input = QLineEdit()
         self.age_input = QLineEdit()
 
-        # 添加两个按钮用于添加和更新用户信息
         self.add_user_button = QPushButton("Add User")
         self.add_user_button.clicked.connect(self.add_user_info)
-
         self.update_user_button = QPushButton("Update User")
         self.update_user_button.clicked.connect(self.update_user_info)
 
-        self.layout.addWidget(self.user_info_label)
-        # self.layout.addWidget(QLabel("id:"))
-        # self.layout.addWidget(self.id_input)
-        self.layout.addWidget(QLabel("Name:"))
-        self.layout.addWidget(self.name_input)
-        self.layout.addWidget(QLabel("Gender:"))
-        self.layout.addWidget(self.gender_input)
-        self.layout.addWidget(QLabel("Student ID:"))
-        self.layout.addWidget(self.student_id_input)
-        self.layout.addWidget(QLabel("Account Information:"))
-        self.layout.addWidget(self.account_info_input)
-        self.layout.addWidget(QLabel("Role:"))
-        self.layout.addWidget(self.role_input)
-        self.layout.addWidget(QLabel("Age:"))
-        self.layout.addWidget(self.age_input)
-        self.layout.addWidget(self.add_user_button)
-        self.layout.addWidget(self.update_user_button)
-        # 设置主窗口布局
-        self.central_widget.setLayout(self.layout)
-        # 记录当前用户的 ID，用于更新用户信息
-        self.current_user_id = None
+        self.delete_user_label = QLabel("User ID to delete:")
+        self.delete_user_input = QLineEdit()
+        self.delete_user_button = QPushButton("Delete User")
+        self.delete_user_button.clicked.connect(self.delete_user_info)
+
+        # 将用户相关的组件添加到用户布局中
+        self.user_layout.addWidget(self.user_id_label)
+        self.user_layout.addWidget(self.user_id_input)
+        self.user_layout.addWidget(self.get_user_button)
+        self.user_layout.addWidget(self.user_info_label)
+        self.user_layout.addWidget(QLabel("Name:"))
+        self.user_layout.addWidget(self.name_input)
+        self.user_layout.addWidget(QLabel("Gender:"))
+        self.user_layout.addWidget(self.gender_input)
+        self.user_layout.addWidget(QLabel("Student ID:"))
+        self.user_layout.addWidget(self.student_id_input)
+        self.user_layout.addWidget(QLabel("Account Information:"))
+        self.user_layout.addWidget(self.account_info_input)
+        self.user_layout.addWidget(QLabel("Role:"))
+        self.user_layout.addWidget(self.role_input)
+        self.user_layout.addWidget(QLabel("Age:"))
+        self.user_layout.addWidget(self.age_input)
+        self.user_layout.addWidget(self.add_user_button)
+        self.user_layout.addWidget(self.update_user_button)
+        self.user_layout.addWidget(self.delete_user_label)
+        self.user_layout.addWidget(self.delete_user_input)
+        self.user_layout.addWidget(self.delete_user_button)
+
+    def create_merchant_widgets(self):
+        self.get_merchant_label = QLabel("Merchant ID to retrieve:")
+        self.get_merchant_input = QLineEdit()
+        self.get_merchant_button = QPushButton("Get Merchant Info")
+        self.get_merchant_button.clicked.connect(self.get_merchant_info)
+
+        self.merchant_layout.addWidget(self.get_merchant_label)
+        self.merchant_layout.addWidget(self.get_merchant_input)
+        self.merchant_layout.addWidget(self.get_merchant_button)
+
+        self.add_merchant_label = QLabel("Add/Update Merchant Info:")
+        self.add_merchant_name_input = QLineEdit()
+        self.add_merchant_address_input = QLineEdit()
+        self.add_merchant_main_dish_input = QLineEdit()
+        self.add_merchant_button = QPushButton("Add Merchant")
+        self.add_merchant_button.clicked.connect(self.add_merchant_info)
+
+        self.update_merchant_button = QPushButton("Update Merchant")
+        self.update_merchant_button.clicked.connect(self.update_merchant_info)
+
+        self.delete_merchant_label = QLabel("Merchant ID to delete:")
+        self.delete_merchant_input = QLineEdit()
+        self.delete_merchant_button = QPushButton("Delete Merchant")
+        self.delete_merchant_button.clicked.connect(self.delete_merchant_info)
+
+        self.merchant_layout.addWidget(self.add_merchant_label)
+        self.merchant_layout.addWidget(QLabel("Name:"))
+        self.merchant_layout.addWidget(self.add_merchant_name_input)
+        self.merchant_layout.addWidget(QLabel("Address:"))
+        self.merchant_layout.addWidget(self.add_merchant_address_input)
+        self.merchant_layout.addWidget(QLabel("Main Dish:"))
+        self.merchant_layout.addWidget(self.add_merchant_main_dish_input)
+        self.merchant_layout.addWidget(self.add_merchant_button)
+        self.merchant_layout.addWidget(self.update_merchant_button)
+        self.merchant_layout.addWidget(self.delete_merchant_label)
+        self.merchant_layout.addWidget(self.delete_merchant_input)
+        self.merchant_layout.addWidget(self.delete_merchant_button)
 
     def get_user_info(self):
         user_id = self.user_id_input.text()
@@ -208,6 +263,83 @@ class AdminWindow(QMainWindow):
         QMessageBox.information(self, "Success", "User information updated successfully")
         # 清空输入框
         self.clear_inputs()
+    
+    def delete_user_info(self):
+        # 获取要删除的用户 ID
+        user_id = self.delete_user_input.text()
+        if not user_id.isdigit():
+            QMessageBox.warning(self, "Input Error", "User ID must be a number")
+            return
+        # 调用 Manager 的方法删除用户
+        self.manager.delete_user(int(user_id))
+        # 提示用户删除成功
+        QMessageBox.information(self, "Success", "User deleted successfully")
+        # 清空输入框
+        self.delete_user_input.clear()
+
+    def get_merchant_info(self):
+        merchant_id = self.get_merchant_input.text()
+        if not merchant_id.isdigit():
+            QMessageBox.warning(self, "Input Error", "Merchant ID must be a number")
+            return
+        merchant_info = self.manager.get_merchant_info(int(merchant_id), page=1, pageSize=10)
+        if not merchant_info:
+            QMessageBox.information(self, "No Data", "No merchant found with the given ID")
+            return
+        self.current_merchant_id = int(merchant_id)
+        self.merchant_info_table.setRowCount(len(merchant_info))
+        self.merchant_info_table.setColumnCount(len(merchant_info[0]))
+        self.merchant_info_table.setHorizontalHeaderLabels([desc[0] for desc in self.manager.db.cursor.description])
+        for row_idx, row_data in enumerate(merchant_info):
+            for col_idx, col_data in enumerate(row_data):
+                self.merchant_info_table.setItem(row_idx, col_idx, QTableWidgetItem(str(col_data)))
+        # 将商户信息填充到输入框中以便更新
+        self.add_merchant_name_input.setText(merchant_info[0][1])  # Name
+        self.add_merchant_address_input.setText(merchant_info[0][2])  # Address
+        self.add_merchant_main_dish_input.setText(merchant_info[0][3])  # Main Dish
+
+    def add_merchant_info(self):
+        name = self.add_merchant_name_input.text()
+        address = self.add_merchant_address_input.text()
+        main_dish = self.add_merchant_main_dish_input.text()
+        if not all([name, address, main_dish]):
+            QMessageBox.warning(self, "Input Error", "All fields are required")
+            return
+        merchant_info = Merchant(name=name, address=address, main_dish=main_dish)
+        self.manager.add_merchant(merchant_info)
+        QMessageBox.information(self, "Success", "Merchant added successfully")
+        self.clear_merchant_inputs()
+
+    def update_merchant_info(self):
+        # merchant_id = self.update_merchant_id_input.text()
+        name = self.add_merchant_name_input.text()
+        address = self.add_merchant_address_input.text()
+        main_dish = self.add_merchant_main_dish_input.text()
+        if not self.current_merchant_id:
+            QMessageBox.warning(self, "Input Error", "Merchant ID must be a number")
+            return
+        if not all([name, address, main_dish]):
+            QMessageBox.warning(self, "Input Error", "All fields are required")
+            return
+        merchant_info = Merchant(name=name, address=address, main_dish=main_dish)
+        self.manager.update_merchant(self.current_merchant_id, merchant_info)
+        QMessageBox.information(self, "Success", "Merchant information updated successfully")
+        self.clear_merchant_inputs()
+
+    def delete_merchant_info(self):
+        merchant_id = self.delete_merchant_input.text()
+        if not merchant_id.isdigit():
+            QMessageBox.warning(self, "Input Error", "Merchant ID must be a number")
+            return
+        self.manager.delete_business(int(merchant_id))
+        QMessageBox.information(self, "Success", "Merchant deleted successfully")
+        self.delete_merchant_input.clear()
+
+    def clear_merchant_inputs(self):
+        self.get_merchant_input.clear()
+        self.add_merchant_name_input.clear()
+        self.add_merchant_address_input.clear()
+        self.add_merchant_main_dish_input.clear()
 
     def clear_inputs(self):
         # 清空输入框

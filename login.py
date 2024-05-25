@@ -43,7 +43,11 @@ class LoginWindow(QWidget):
         username = self.username_edit.text()
         password = self.password_edit.text()
 
-        # 模拟登录验证
+        self.close()
+        self.admin_window = 管理员.AdminWindow()
+        self.admin_window.show()
+
+        '''# 模拟登录验证
         if identity == "管理员" and username == "admin" and password == "admin123":
             self.close()
             self.admin_window = 管理员.AdminWindow()
@@ -55,7 +59,7 @@ class LoginWindow(QWidget):
             self.close()
             用户.main()
         else:
-            QMessageBox.warning(self, "登录失败", "用户名或密码错误")
+            QMessageBox.warning(self, "登录失败", "用户名或密码错误")'''
 
 
 if __name__ == "__main__":

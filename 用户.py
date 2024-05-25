@@ -1,8 +1,6 @@
 from 数据库连接 import DB
 from 订单 import Order
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem
-from PyQt5.QtWidgets import QHBoxLayout, QFormLayout, QMessageBox
-import sys
+
 
 class User:
     def __init__(self, name, gender, student_id, account_information,role,age):
@@ -11,7 +9,7 @@ class User:
         self.gender = gender  # 对应数据库表中的 `gender`
         self.student_id = student_id  # 对应数据库表中的 `student_id`
         self.account_information = account_information  # 对应数据库表中的 `account_information`
-        self.role=role
+        self.role = role
         self.age=age
         self.db = DB()
 
@@ -23,8 +21,8 @@ class User:
                 f"Account Information: {self.account_information}\n")
 
     def createOrder(self, orderInfo: Order):
-        sql = "INSERT INTO orders (user_id,merchant_id,dish_id,order_status,method) VALUES (%s, %s, %s, %s,%s,%s)"
-        values = (self.id, orderInfo.merchant_id, orderInfo.dish_id,orderInfo.order_status,orderInfo.method)
+        sql = "INSERT INTO orders (user_id,merchant_id,dish_id,order_status,method) VALUES (%s, %s, %s,%s,%s)"
+        values = (self.id, orderInfo.merchant_id, orderInfo.dish_id, "preparing", orderInfo.method)
         self.db.execute(sql, values)
         self.db.close()
 
@@ -63,11 +61,13 @@ class User:
 
     def getMerchantAllInfos(self, merchant_id, page, pageSize):
         offset = (page - 1) * pageSize
-        sql = ("SELECT merchants.id,merchants.name,merchants.address,merchants.main_dish,dishes.id,dishes.name,"
-               "dishes.description,comments.score,comments.content   FROM merchants,dishes,comments where "
-               "merchants.id=%s and"
-               "comments.merchant_id=merchants.id and comments.dish_id=null and"
-               "dishes.merchant_id=merchants.id LIMIT %s OFFSET %s")
+        sql = ("SELECT merchants.id, merchants.name, merchants.address, merchants.main_dish, dishes.id AS dish_id, dishes.name AS dish_name, "
+       "dishes.description, comments.score, comments.content "
+       "FROM merchants "
+       "JOIN dishes ON dishes.merchant_id = merchants.id "
+       "LEFT JOIN comments ON comments.merchant_id = merchants.id AND comments.dish_id IS NULL "
+       "WHERE merchants.id = %s "
+       "LIMIT %s OFFSET %s")
         values = (merchant_id, pageSize, offset)
 
         result = self.db.execute(sql, values)
@@ -76,7 +76,7 @@ class User:
 
     def getDishInfos(self, merchant_id, dish_id, page, pageSize):
         offset = (page - 1) * pageSize
-        sql = ("SELECT id,name,price,picture FROM dishes where merchant_id=%s and id=%s  LIMIT %s OFFSET %s")
+        sql = ("SELECT id,name,price,image FROM dishes where merchant_id=%s and id=%s  LIMIT %s OFFSET %s")
         values = (merchant_id, dish_id, pageSize, offset)
         result = self.db.execute(sql, values)
         self.db.close()
@@ -98,7 +98,7 @@ class User:
         self.db.close()
         return result
 
-    def addFavorites(self, merchant_id, dish_id):
+    def addFavorites(self, merchant_id, dish_id=None):
         if dish_id:
             sql = "INSERT INTO collections (user_id,merchant_id,dish_id) VALUES (%s, %s, %s)"
             values = (self.id, merchant_id, dish_id)
@@ -107,9 +107,3 @@ class User:
             values = (self.id, merchant_id)
         self.db.execute(sql, values)
         self.db.close()
-
-class UserWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("User Window")
-        # 在这里添加用户窗口的其他组件和布局
