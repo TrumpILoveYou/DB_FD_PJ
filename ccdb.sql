@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `age` int NOT NULL, -- 
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+ALTER TABLE `users`
+ADD COLUMN `password` varchar(255) NOT NULL;
 
 -- 商户表
 CREATE TABLE IF NOT EXISTS `merchants` (
@@ -28,6 +29,8 @@ CREATE TABLE IF NOT EXISTS `merchants` (
   `main_dish` varchar(255) NOT NULL, -- 主打菜品
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+ALTER TABLE `merchants`
+ADD COLUMN `password` varchar(255) NOT NULL;
 
 -- 菜品表
 CREATE TABLE IF NOT EXISTS `dishes` (

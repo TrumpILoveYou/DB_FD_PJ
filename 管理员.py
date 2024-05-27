@@ -14,10 +14,9 @@ class Manager:
     def __str__(self):
         return f"Manager ID: {self.id}\nName: {self.name}"
 
-    def get_user_info(self, user_id,page, pageSize):
-        offset = (page - 1) * pageSize
-        sql = "SELECT * FROM users WHERE id = %s LIMIT %s OFFSET %s"
-        values = (user_id,pageSize, offset)
+    def get_user_info(self, user_id):
+        sql = "SELECT * FROM users WHERE id = %s"
+        values = (user_id,)
         result = self.db.execute(sql, values)
         # self.db.close()
         return result
@@ -196,7 +195,7 @@ class AdminWindow(QMainWindow):
         if not user_id.isdigit():
             QMessageBox.warning(self, "Input Error", "User ID must be a number")
             return
-        user_info = self.manager.get_user_info(int(user_id), page=1, pageSize=10)
+        user_info = self.manager.get_user_info(int(user_id))
         if not user_info:
             QMessageBox.information(self, "No Data", "No user found with the given ID")
             return
