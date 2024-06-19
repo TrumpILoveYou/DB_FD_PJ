@@ -36,8 +36,7 @@ class RegisterWindow(QDialog):
             self.extra_edit = QLineEdit()
             layout.addRow(self.extra_label, self.extra_edit)
         elif identity == "管理员":
-            QMessageBox.warning(self, "注册失败", "请选择商户或用户进行注册")
-            return
+            self.extra_edit = QLineEdit()
 
         self.register_button = QPushButton("注册")
         self.register_button.clicked.connect(self.register)
@@ -58,8 +57,8 @@ class RegisterWindow(QDialog):
         if self.identity == "商户":
             # 创建新商户
             merchant_info = Merchant(name=username, address=extra_info, main_dish="")
-            sql = "INSERT INTO merchants (name, address, main_dish) VALUES (%s, %s, %s)"
-            values = (merchant_info.name, merchant_info.address,merchant_info.main_dish)
+            sql = "INSERT INTO merchants (name, address, main_dish, password) VALUES (%s, %s, %s, %s)"
+            values = (merchant_info.name, merchant_info.address, merchant_info.main_dish, password)
             self.db.execute(sql, values)
             QMessageBox.information(self, "注册成功", f"商户 {username} 注册成功")
         elif self.identity == "用户":
@@ -70,6 +69,12 @@ class RegisterWindow(QDialog):
             values = (user_info.name, user_info.gender, user_info.student_id, user_info.account_information,user_info.role,user_info.age, password)
             self.db.execute(sql, values)
             QMessageBox.information(self, "注册成功", f"用户 {username} 注册成功")
+        elif self.identity == "管理员":
+            # 创建新管理员
+            sql = "INSERT INTO managers (name, password) VALUES (%s, %s)"
+            values = (username, password)
+            self.db.execute(sql, values)
+            QMessageBox.information(self, "注册成功", f"管理员 {username} 注册成功")
 
         self.accept()
 
@@ -119,10 +124,15 @@ class LoginWindow(QWidget):
         password = self.password_edit.text()
 
         # 模拟登录验证
-        if identity == "管理员" and username == "admin" and password == "admin123":
-            self.close()
-            self.window = 管理员.AdminWindow()
-            self.window.show()
+        if identity == "管理员":
+            sql = "SELECT password FROM managers WHERE name = %s"
+            result = self.db.execute(sql, (username,))
+            for row in result:
+                if password == row[0]:
+                    self.close()
+                    self.window = 管理员.AdminWindow()
+                    self.window.show()
+                    return
         elif identity == "商户":
             # 从数据库中取出密码进行比较
             sql = "SELECT password FROM merchants WHERE name = %s"
