@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPu
 import sys
 
 class Merchant:
-    def __init__(self, name, address, main_dish):
-        # !!! self.id = id  # 对应数据库表中的 `id`
+    def __init__(self,id, name, address, main_dish):
+        self.id = id  # 对应数据库表中的 `id`
         self.name = name  # 对应数据库表中的 `name`
         self.address = address  # 对应数据库表中的 `address`
         self.main_dish = main_dish  # 对应数据库表中的 `main_dish`
@@ -16,6 +16,13 @@ class Merchant:
                 f"Name: {self.name}\n"
                 f"Address: {self.address}\n"
                 f"Main Dish: {self.main_dish}\n")
+
+    def getSelfInfo_merchant(self):
+        sql=("SELECT * FROM merchants WHERE id = %s ")
+        values=(self.id)
+        result = self.db.execute(sql, values)
+        return result
+
     def add_dish(self, dish_info:Dish):
         sql = """INSERT INTO dishes 
                  (merchant_id,name, price, category, description, image, ingredients, nutrition_information, allergens, queue_sales, online_sales, collection_count) 
@@ -27,11 +34,10 @@ class Merchant:
 
     def update_dish(self, dish_id, dish_info: Dish):
         sql = """UPDATE dishes SET name = %s, price = %s, category = %s, description = %s, image = %s, ingredients = %s, 
-                 nutrition_information = %s, allergens = %s, queue_sales = %s, online_sales = %s, collection_count = %s 
+                 nutrition_information = %s, allergens = %s
                  WHERE id = %s"""
         values = (dish_info.name, dish_info.price, dish_info.category, dish_info.description, dish_info.image,
-                  dish_info.ingredients, dish_info.nutrition_information, dish_info.allergens, dish_info.queue_sales,
-                  dish_info.online_sales, dish_info.collection_count, dish_id)
+                  dish_info.ingredients, dish_info.nutrition_information, dish_info.allergens, dish_id)
         self.db.execute(sql, values)
         self.db.close()
 
@@ -59,7 +65,7 @@ class MerchantWindow(QMainWindow):
         self.layout = QVBoxLayout()
 
         # 创建商户相关的组件
-        self.merchant_id_label = QLabel("Merchant ID:")
+        self.merchant_id_label = QLabel("Merchant ID(更新时这里输入dish_id):")
         self.merchant_id_input = QLineEdit()
         self.name_label = QLabel("Dish Name:")
         self.name_input = QLineEdit()
@@ -119,6 +125,7 @@ class MerchantWindow(QMainWindow):
         self.central_widget.setLayout(self.layout)
 
     def add_dish(self):
+        # TODO
         merchant_id = self.merchant_id_input.text()
         name = self.name_input.text()
         price = self.price_input.text()
@@ -140,7 +147,7 @@ class MerchantWindow(QMainWindow):
         dish_info = Dish(id=None, merchant_id=int(merchant_id), name=name, price=float(price), category=category, description=description, image=image, ingredients=ingredients, nutrition_information=nutrition_information, allergens=allergens, queue_sales=0, online_sales=0, collection_count=0)
         
         # Initialize merchant instance
-        self.merchant = Merchant(name="", address="", main_dish="")
+        self.merchant = Merchant(id=-1,name="", address="", main_dish="")
         self.merchant.add_dish(dish_info)
 
         QMessageBox.information(self, "Success", "Dish added successfully")
@@ -168,7 +175,7 @@ class MerchantWindow(QMainWindow):
         dish_info = Dish(id=int(dish_id), merchant_id=None, name=name, price=float(price), category=category, description=description, image=image, ingredients=ingredients, nutrition_information=nutrition_information, allergens=allergens, queue_sales=0, online_sales=0, collection_count=0)
 
         # Initialize merchant instance
-        self.merchant = Merchant(name="", address="", main_dish="")
+        self.merchant = Merchant(id=-1,name="", address="", main_dish="")
         self.merchant.update_dish(int(dish_id), dish_info)
 
         QMessageBox.information(self, "Success", "Dish updated successfully")
@@ -186,7 +193,7 @@ class MerchantWindow(QMainWindow):
             return
 
         # Initialize merchant instance
-        self.merchant = Merchant(name="", address="", main_dish="")
+        self.merchant = Merchant(id=-1,name="", address="", main_dish="")
         self.merchant.delete_dish(int(dish_id))
 
         QMessageBox.information(self, "Success", "Dish deleted successfully")

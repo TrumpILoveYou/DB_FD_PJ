@@ -13,11 +13,13 @@ class DB:
         if self._initialized:
             return
         self._initialized = True
+
+        #  修改点
         self.conn = Connection(
             host="localhost",
             port=3306,
             user="root",
-            password="1122cccc", # password
+            password="", # password
             autocommit=True,
         )
         self.conn.select_db("canteen")

@@ -1,5 +1,5 @@
 
-
+create database canteen;
 -- 管理员表
 CREATE TABLE IF NOT EXISTS `managers` (
   `id` int NOT NULL AUTO_INCREMENT, -- 管理员唯一标识
@@ -15,11 +15,11 @@ CREATE TABLE IF NOT EXISTS `users` (
   `student_id` varchar(255) NOT NULL, -- 学生ID
   `account_information` varchar(255) NOT NULL, -- 账户信息
   `role` varchar(255) NOT NULL, -- 用户角色
-  `age` int NOT NULL, -- 
+  `age` int NOT NULL, --
+  `password` varchar(255) NOT null,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-ALTER TABLE `users`
-ADD COLUMN `password` varchar(255) NOT NULL;
+
 
 -- 商户表
 CREATE TABLE IF NOT EXISTS `merchants` (
@@ -27,10 +27,10 @@ CREATE TABLE IF NOT EXISTS `merchants` (
   `name` varchar(255) NOT NULL, -- 姓名
   `address` varchar(255) NOT NULL, -- 地址
   `main_dish` varchar(255) NOT NULL, -- 主打菜品
+   `password` varchar(255) NOT null,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-ALTER TABLE `merchants`
-ADD COLUMN `password` varchar(255) NOT NULL;
+
 
 -- 菜品表
 CREATE TABLE IF NOT EXISTS `dishes` (
@@ -97,23 +97,23 @@ CREATE TABLE IF NOT EXISTS `orders` (
 
 
 
--- CREATE INDEX idx_dishes_merchant_id ON dishes(merchant_id);
+ CREATE INDEX idx_dishes_merchant_id ON dishes(merchant_id);
 
--- CREATE INDEX idx_collections_user_id ON collections(user_id);
--- CREATE INDEX idx_collections_merchant_id ON collections(merchant_id);
--- CREATE INDEX idx_collections_dish_id ON collections(dish_id);
+ CREATE INDEX idx_collections_user_id ON collections(user_id);
+ CREATE INDEX idx_collections_merchant_id ON collections(merchant_id);
+ CREATE INDEX idx_collections_dish_id ON collections(dish_id);
 
--- CREATE INDEX idx_comments_user_id ON comments(user_id);
--- CREATE INDEX idx_comments_merchant_id ON comments(merchant_id);
--- CREATE INDEX idx_comments_dish_id ON comments(dish_id);
+ CREATE INDEX idx_comments_user_id ON comments(user_id);
+ CREATE INDEX idx_comments_merchant_id ON comments(merchant_id);
+ CREATE INDEX idx_comments_dish_id ON comments(dish_id);
 
--- CREATE INDEX idx_orders_user_id ON orders(user_id);
--- CREATE INDEX idx_orders_merchant_id ON orders(merchant_id);
--- CREATE INDEX idx_orders_dish_id ON orders(dish_id);
--- CREATE INDEX idx_orders_created_at ON orders(created_at);
+ CREATE INDEX idx_orders_user_id ON orders(user_id);
+ CREATE INDEX idx_orders_merchant_id ON orders(merchant_id);
+ CREATE INDEX idx_orders_dish_id ON orders(dish_id);
+ CREATE INDEX idx_orders_created_at ON orders(created_at);
 
 
-/*-- 收藏自动增加
+-- 收藏自动增加
 DELIMITER //
 CREATE TRIGGER update_collection_count_after_insert
 AFTER INSERT ON collections
@@ -125,10 +125,10 @@ BEGIN
         WHERE id = NEW.dish_id;
     END IF;
 END//
-DELIMITER ;'''
+DELIMITER ;
 
 
-'''--销量增加
+--销量增加
 DELIMITER //
 CREATE TRIGGER update_sales_after_insert
 AFTER INSERT ON orders
@@ -144,7 +144,7 @@ BEGIN
         WHERE id = NEW.dish_id;
     END IF;
 END//
-DELIMITER ;*/
+DELIMITER ;
 
 
 SET GLOBAL event_scheduler = ON;
@@ -161,3 +161,20 @@ BEGIN
 END//
 DELIMITER ;
 
+
+INSERT INTO merchants(name, address, main_dish, password) VALUES ('张三', '东区', '烤鸭', 123456);
+INSERT INTO merchants(name, address, main_dish, password) VALUES ('李四', '西区', '火锅', 123456);
+
+insert into users(name,gender,student_id,account_information,`role`,age,password) values("刘督","男",2130,"无","学生",20,123456);
+insert into users(name,gender,student_id,account_information,`role`,age,password) values("麦佳鸿","男",2200,"无","学生",20,123456);
+
+INSERT INTO dishes  (merchant_id,name, price, category, description, image, ingredients, nutrition_information, allergens)
+                 VALUES (1,"烤鸭",100,"烤制品","好吃","https://imgse.com/i/pk6AAG8","脂肪","增肥","豆腐");
+INSERT INTO dishes  (merchant_id,name, price, category, description, image, ingredients, nutrition_information, allergens)
+                 VALUES (2,"火锅",100,"麻辣类","不好吃","https://imgse.com/i/pk6AERS","蛋白质","增肌","豆腐");
+INSERT INTO dishes  (merchant_id,name, price, category, description, image, ingredients, nutrition_information, allergens)
+                 VALUES (1,"叉烧肉",100,"烤制品","特别好吃","https://imgse.com/i/pk6AAG8","脂肪","增肥","无");
+INSERT INTO dishes  (merchant_id,name, price, category, description, image, ingredients, nutrition_information, allergens)
+                 VALUES (1,"烤排骨",100,"烤制品","非常好吃","https://imgse.com/i/pk6AAG8","脂肪","增肥","无");
+INSERT INTO dishes  (merchant_id,name, price, category, description, image, ingredients, nutrition_information, allergens)
+                 VALUES (1,"烧鹅",100,"烤制品","非常好吃","https://imgse.com/i/pk6AAG8","脂肪","增肥","无");

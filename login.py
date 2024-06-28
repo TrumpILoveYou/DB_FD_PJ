@@ -1,5 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QMessageBox, QComboBox
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, \
+    QMessageBox, QComboBox
 from PyQt5.QtWidgets import QDialog, QFormLayout
 import 管理员
 import 商户
@@ -8,16 +9,17 @@ from 用户 import User
 from 商户 import Merchant
 from 数据库连接 import DB
 
+
 class RegisterWindow(QDialog):
     def __init__(self, identity):
         super().__init__()
         self.identity = identity
         self.setWindowTitle(f"{identity} 注册")
         self.resize(400, 300)
-        self.db=DB()
+        self.db = DB()
 
         layout = QFormLayout()
-        
+
         self.username_label = QLabel("用户名:")
         self.username_edit = QLineEdit()
         layout.addRow(self.username_label, self.username_edit)
@@ -57,9 +59,9 @@ class RegisterWindow(QDialog):
         # 模拟注册过程
         if self.identity == "商户":
             # 创建新商户
-            merchant_info = Merchant(name=username, address=extra_info, main_dish="")
+            merchant_info = Merchant(id=-1,name=username, address=extra_info, main_dish="")
             sql = "INSERT INTO merchants (name, address, main_dish) VALUES (%s, %s, %s)"
-            values = (merchant_info.name, merchant_info.address,merchant_info.main_dish)
+            values = (merchant_info.name, merchant_info.address, merchant_info.main_dish)
             self.db.execute(sql, values)
             QMessageBox.information(self, "注册成功", f"商户 {username} 注册成功")
         elif self.identity == "用户":
@@ -67,7 +69,9 @@ class RegisterWindow(QDialog):
             user_info = User(name=username, gender=extra_info, student_id="", account_information="", role="", age=0)
             # 存储原始密码到数据库
             sql = "INSERT INTO users (name, gender, student_id, account_information, role, age, password) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            values = (user_info.name, user_info.gender, user_info.student_id, user_info.account_information,user_info.role,user_info.age, password)
+            values = (
+            user_info.name, user_info.gender, user_info.student_id, user_info.account_information, user_info.role,
+            user_info.age, password)
             self.db.execute(sql, values)
             QMessageBox.information(self, "注册成功", f"用户 {username} 注册成功")
 
@@ -123,6 +127,7 @@ class LoginWindow(QWidget):
             self.close()
             self.window = 管理员.AdminWindow()
             self.window.show()
+            return
         elif identity == "商户":
             # 从数据库中取出密码进行比较
             sql = "SELECT password FROM merchants WHERE name = %s"

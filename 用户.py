@@ -24,6 +24,12 @@ class User:
                 f"Student ID: {self.student_id}\n"
                 f"Account Information: {self.account_information}\n")
 
+    def getSelfInfo_user(self):
+        sql=("SELECT * FROM users WHERE id = %s ")
+        values=(self.id)
+        result = self.db.execute(sql, values)
+        return result
+
     def createOrder(self, orderInfo: Order):
         sql = "INSERT INTO orders (user_id,merchant_id,dish_id,order_status,method) VALUES (%s, %s, %s,%s,%s)"
         values = (self.id, orderInfo.merchant_id, orderInfo.dish_id, "preparing", orderInfo.method)
@@ -47,7 +53,7 @@ class User:
             sql = "INSERT INTO comments (user_id,merchant_id,dish_id,score,content) VALUES (%s, %s, %s, %s,%s)"
             values = (self.id, merchant_id, dish_id, score, content)
         else:
-            sql = "INSERT INTO comments (user_id,merchant_id,score,content) VALUES (%s, %s, %s)"
+            sql = "INSERT INTO comments (user_id,merchant_id,score,content) VALUES (%s, %s, %s, %s)"
             values = (self.id, merchant_id, score, content)
         self.db.execute(sql, values)
 
@@ -69,9 +75,9 @@ class User:
         return result
 
 
-    def getDishInfos(self, merchant_id, dish_id):
-        sql = "SELECT id, name, price, image FROM dishes WHERE merchant_id = %s AND id = %s"
-        values = (merchant_id, dish_id)
+    def getDishInfos(self, merchant_id):
+        sql = "SELECT id, name, price, image FROM dishes WHERE merchant_id = %s"
+        values = (merchant_id)
         result = self.db.execute(sql, values)
         return result
 
@@ -232,6 +238,10 @@ class UserWindow(QMainWindow):
             QMessageBox.warning(self, "Input Error", "All fields are required")
             return
 
+        if (not order_method=="queue") and (not order_method=="online"):
+            QMessageBox.warning(self, "Input Error", "queue or online")
+            return
+
         if not merchant_id.isdigit() or not dish_id.isdigit():
             QMessageBox.warning(self, "Input Error", "Merchant ID and Dish ID must be numbers")
             return
@@ -306,11 +316,13 @@ class UserWindow(QMainWindow):
             row = self.table_widget.rowCount()
             self.table_widget.insertRow(row)
             for column, data in enumerate(row_data):
-                self.table_widget.setItem(row, column, QTableWidgetItem(str(data)))
+                if not column==4:
+                  self.table_widget.setItem(row, column, QTableWidgetItem(str(data)))
 
     def comment_frontend(self):
         merchant_id = self.comment_merchant_id_input.text()
         dish_id = self.comment_dish_id_input.text()
+
         score = self.comment_score_input.text()
         content = self.comment_content_input.text()
 
@@ -326,7 +338,10 @@ class UserWindow(QMainWindow):
             QMessageBox.warning(self, "Input Error", "Score must be a number between 1 and 5")
             return
 
-        self.user.comment(int(merchant_id), int(dish_id) if dish_id else None, int(score), content)
+
+        self.user.comment(int(merchant_id), int(dish_id) if dish_id and dish_id.isdigit() else None, int(score), content)
+
+
 
         QMessageBox.information(self, "Success", "Comment added successfully")
         self.clear_comment_inputs()
@@ -360,20 +375,20 @@ class UserWindow(QMainWindow):
 
     def get_dish_info_frontend(self):
         merchant_id = self.merchant_id_input.text()
-        dish_id = self.dish_id_input.text()
 
-        if not all([merchant_id, dish_id]):
+
+        if not all(merchant_id):
             QMessageBox.warning(self, "Input Error", "All fields are required")
             return
 
-        if not merchant_id.isdigit() or not dish_id.isdigit():
+        if not merchant_id.isdigit() :
             QMessageBox.warning(self, "Input Error", "Merchant ID and Dish ID must be numbers")
             return
 
         # 调用用户实例的 getDishInfos 方法
-        dish_info = self.user.getDishInfos(int(merchant_id), int(dish_id))
+        dish_info = self.user.getDishInfos(int(merchant_id))
 
-        self.table_widget.setRowCount(0)
+        self.table_widget.setRowCount(len(dish_info))
         self.table_widget.setColumnCount(len(dish_info[0]))
         self.table_widget.setHorizontalHeaderLabels([desc[0] for desc in self.db.cursor.description])
 

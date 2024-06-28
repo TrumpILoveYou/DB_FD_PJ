@@ -22,8 +22,8 @@ class Manager:
         return result
 
     def add_user(self, user_info:User):
-        sql = "INSERT INTO users (name, gender, student_id, account_information, role, age) VALUES (%s, %s, %s, %s, %s, %s)"
-        values = (user_info.name, user_info.gender, user_info.student_id, user_info.account_information,user_info.role,user_info.age)
+        sql = "INSERT INTO users (name, gender, student_id, account_information, role, age,password) VALUES (%s, %s, %s, %s, %s, %s,%s)"
+        values = (user_info.name, user_info.gender, user_info.student_id, user_info.account_information,user_info.role,user_info.age,"123456")
         self.db.execute(sql, values)
         # self.db.close()
 
@@ -49,8 +49,8 @@ class Manager:
         return result
 
     def add_merchant(self, merchant_info:Merchant):
-        sql = "INSERT INTO merchants (name, address, main_dish) VALUES (%s, %s, %s)"
-        values = (merchant_info.name, merchant_info.address,merchant_info.main_dish)
+        sql = "INSERT INTO merchants (name, address, main_dish,password) VALUES (%s, %s, %s,%s)"
+        values = (merchant_info.name, merchant_info.address,merchant_info.main_dish,"123456")
         self.db.execute(sql, values)
         # self.db.close()
 
@@ -304,7 +304,7 @@ class AdminWindow(QMainWindow):
         if not all([name, address, main_dish]):
             QMessageBox.warning(self, "Input Error", "All fields are required")
             return
-        merchant_info = Merchant(name=name, address=address, main_dish=main_dish)
+        merchant_info = Merchant(id=-1,name=name, address=address, main_dish=main_dish)
         self.manager.add_merchant(merchant_info)
         QMessageBox.information(self, "Success", "Merchant added successfully")
         self.clear_merchant_inputs()
@@ -320,7 +320,7 @@ class AdminWindow(QMainWindow):
         if not all([name, address, main_dish]):
             QMessageBox.warning(self, "Input Error", "All fields are required")
             return
-        merchant_info = Merchant(name=name, address=address, main_dish=main_dish)
+        merchant_info = Merchant(id=-1,name=name, address=address, main_dish=main_dish)
         self.manager.update_merchant(self.current_merchant_id, merchant_info)
         QMessageBox.information(self, "Success", "Merchant information updated successfully")
         self.clear_merchant_inputs()

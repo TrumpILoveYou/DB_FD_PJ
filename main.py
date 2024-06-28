@@ -1,46 +1,32 @@
+from datetime import datetime, timedelta
 from 数据库连接 import DB
 from 管理员 import Manager
 from 用户 import User
-from 商户 import Merchant
-from 菜品 import Dish
-from 订单 import Order
 
-db=DB()
-maneger=Manager(1,"刘督")
+db = DB()
 
-#print(maneger.get_user_info(1,1,1))
-#maneger.add_user(User(888,"ld","m","fd20","666","student",23))
-#maneger.add_merchant(Merchant(65656556,"mayun","china","vege,fish"))
-
-#merchant=Merchant(1,"mayun","china","vege,fish")
-user=User(1,"ld","m","fd20","666","student",23)
-#user.comment(1,1,5,"nice")
-user.addFavorites(1,1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#user.createOrder(Order(10,"Queue",1,1,1,"dwada"))
-#print(maneger.get_user_info(1,1,1))
-#merchant.add_dish(Dish(1,1,"fish",10,"meat","delicious","baidu","danbai","wu","wu",0,0,0))
-#user.comment(1,1,5,"好吃")
-#user.createOrder(Order(5,"Queue",1,1,1,"false"))
-#merchant.delete_dish(1)
 def analyzeMerchantDishes(merchant_id):
-    sql = ("""SELECT 
+    #  菜品数据分析：某个商户所有菜品的评分、销量以及购买该菜品次数最多的人。
+    sql = ("""
+              WITH user_orders(dish_id,user_id,name,order_count) as(
+                        SELECT
+                          o.dish_id,
+                          o.user_id,
+                          u.name,
+                          COUNT(o.id) AS order_count
+                        FROM
+                          orders o
+                        INNER JOIN
+                          users u ON o.user_id = u.id
+                        GROUP BY
+                          o.dish_id, o.user_id, u.name
+              
+              
+              )
+              
+              
+              
+              SELECT 
                      d.id AS dish_id,
                      d.name AS dish_name,
                      IFNULL(AVG(c.score), 0) AS average_score,
@@ -53,23 +39,11 @@ def analyzeMerchantDishes(merchant_id):
                LEFT JOIN
                      comments c ON d.id = c.dish_id
                LEFT JOIN
-                     (
-                        SELECT
-                          o.dish_id,
-                          o.user_id,
-                          u.name,
-                          COUNT(o.id) AS order_count
-                        FROM
-                          orders o
-                        INNER JOIN
-                          users u ON o.user_id = u.id
-                        GROUP BY
-                          o.dish_id, o.user_id, u.name
-                      ) AS user_orders ON d.id = user_orders.dish_id
+                      user_orders ON d.id = user_orders.dish_id
                 LEFT JOIN
                         users u ON user_orders.user_id = u.id
-                WHERE
-                  d.merchant_id = %s
+                where
+                    u.id=%s
                 GROUP BY
                   d.id, u.id
                 ORDER BY
@@ -80,42 +54,55 @@ def analyzeMerchantDishes(merchant_id):
     db.close()
     return result
 
-def analyzeUserDishSales(user_id, timeRange="1 WEEK"):
+def analyzeUserDishSales(user_id,time_range_type="week"):
+    # 用户收藏各个菜品在一段时间各个点餐方式销量
+
+    # 获取当前时间
+    end_date = datetime.now()
+
+    # 格式化时间为 'YYYY-MM-DD' 形式
+    end = end_date.strftime('%Y-%m-%d')
+
+    # 减去一
+    if time_range_type=="week":
+        one_ago = end_date - timedelta(weeks=1)
+    elif time_range_type=="month":
+        one_ago = end_date - timedelta(weeks=4.3)
+    elif time_range_type == "year":
+        one_ago = end_date - timedelta(weeks=4.3*12)
+    else:
+        one_ago = end_date
+
+    # 格式化日期为 'YYYY-MM-DD' 形式
+    start = one_ago.strftime('%Y-%m-%d')
     sql = ("""
-                SET @start_date = DATE_SUB(CURDATE(), INTERVAL %s);
-                SET @end_date = CURDATE();
-                
+
                 SELECT
                     d.id AS dish_id,
                     d.name AS dish_name,
                     d.queue_sales,
-                    d.online_sales,
-                    SUM(CASE WHEN o.order_status = 'queue' THEN 1 ELSE 0 END) AS queue_sales_within_period,
-                    SUM(CASE WHEN o.order_status = 'online' THEN 1 ELSE 0 END) AS online_sales_within_period
+                    d.online_sales
                 FROM
                     collections c
                 JOIN
                     dishes d ON c.dish_id = d.id
                 LEFT JOIN
-                    orders o ON d.id = o.dish_id AND o.created_at BETWEEN @start_date AND @end_date
+                    orders o ON d.id = o.dish_id AND o.created_at BETWEEN %s AND %s
                 WHERE
                     c.user_id = %s
                 GROUP BY
                     d.id, d.name
                 ORDER BY
                     d.name;""")
-    values = (timeRange,user_id)
+    values = (start, end, user_id)
     result = db.execute(sql, values)
     db.close()
     return result
 
-def analyzeMerchantFans(merchant_id, threshold):
+
+def analyzeMerchantFans(merchant_id, threshold, start_date='2023-01-01', end_date='2024-12-31'):
+    # 某商户忠实粉丝各个菜品购买次数
     sql = ("""
-                 -- 定义时间范围和商户ID
-                SET @start_date = '2023-01-01';
-                SET @end_date = '2023-12-31';
-                SET @merchant_id = 1; -- 替换为目标商户的ID
-                SET @threshold = 5; -- 替换为忠实粉丝的消费次数阈值
                 
                 -- 查询忠实粉丝在各个菜品上的购买次数分布
                 SELECT
@@ -132,7 +119,7 @@ def analyzeMerchantFans(merchant_id, threshold):
                     dishes d ON o.dish_id = d.id
                 WHERE
                     o.merchant_id = %s
-                    AND o.created_at BETWEEN @start_date AND @end_date
+                    AND o.created_at BETWEEN %s AND %s
                     AND o.user_id IN (
                         SELECT
                             user_id
@@ -140,7 +127,7 @@ def analyzeMerchantFans(merchant_id, threshold):
                             orders
                         WHERE
                             merchant_id = %s
-                            AND created_at BETWEEN @start_date AND @end_date
+                            AND created_at BETWEEN %s AND %s
                         GROUP BY
                             user_id
                         HAVING
@@ -151,68 +138,79 @@ def analyzeMerchantFans(merchant_id, threshold):
                 ORDER BY
                     u.id, d.id;
                 """
-                )
-    values = (merchant_id,merchant_id,threshold)
+           )
+    values = (merchant_id, start_date, end_date, merchant_id, start_date, end_date, threshold)
     result = db.execute(sql, values)
     db.close()
     return result
 
-def analyzeUserActivity(user_id,choice:str):
 
-    if choice=="week":
-        sql=("""-- 每周订单数量
-                SELECT 
-                    'weekly' AS period_type,
-                    YEARWEEK(created_at, 1) AS period, 
-                    COUNT(*) AS orders_count
-                FROM 
-                    orders
-                WHERE 
-                    user_id = %s
-                GROUP BY 
-                    YEARWEEK(created_at, 1)
-                UNION ALL""")
+def analyzeUserActivity(choice="week"):
+    # 用户活跃度分析
+    # 获取当前时间
+    end_date = datetime.now()
+
+    # 修正
+    end_date=end_date + timedelta(weeks=0.2)
+    # 格式化时间为 'YYYY-MM-DD' 形式
+    end = end_date.strftime('%Y-%m-%d')
+
+    # 减去一
+    if choice == "week":
+        one_ago = end_date - timedelta(weeks=1)
     else:
-        #choice=="month":
-        sql=("""
-        -- 每月订单数量
+        one_ago = end_date - timedelta(weeks=4.3)
+
+    # 格式化日期为 'YYYY-MM-DD' 形式
+    start = one_ago.strftime('%Y-%m-%d')
+
+
+    sql = ("""
                 SELECT 
-                    'monthly' AS period_type,
-                    DATE_FORMAT(created_at, '%Y-%m') AS period, 
+                    user_id,
+                    name,
                     COUNT(*) AS orders_count
                 FROM 
                     orders
-                WHERE 
-                    user_id =%s
-                GROUP BY 
-                    DATE_FORMAT(created_at, '%Y-%m')
-                UNION ALL
-        """)
-    values = (user_id)
+                join users on orders.user_id=users.id
+                where created_at between %s and %s
+                GROUP BY
+                   user_id,name
+                """)
+    values = (start,end)
     result = db.execute(sql, values)
     db.close()
     return result
 
-def getTheMostPopularDish(merchant_id, threshold):
+
+def getTheMostPopularDish(merchant_id):
+    # 取得商家最受欢迎的菜品
     sql = ("""
                 SELECT 
                     d.id AS dish_id,
                     d.name AS dish_name,
-                    d.merchant_id,
-                    m.name AS merchant_name,
-                    d.queue_sales,
-                    d.online_sales,
                     (d.queue_sales + d.online_sales) AS total_sales
                 FROM 
                     dishes d
                 JOIN 
                     merchants m ON d.merchant_id = m.id
+                WHERE 
+                    m.id=%s
                 ORDER BY 
-                    total_sales DESC
-                LIMIT 10;
+                    (d.queue_sales + d.online_sales) DESC
+                LIMIT 3;
                 """
            )
-    values = (merchant_id, merchant_id, threshold)
+    values = (merchant_id)
     result = db.execute(sql, values)
     db.close()
     return result
+
+
+if __name__ == '__main__':
+    maneger = Manager(1, "刘督")
+
+    user = User("ld", "男", "2130", "6", "学生", 20)
+
+    # user.addFavorites(1,1)
+    print(analyzeMerchantDishes(1))
